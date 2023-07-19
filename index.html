@@ -88,7 +88,7 @@
     </div>
     <div class='map-overlay' id='legend'></div>
     <script>
-        mapboxgl.accessToken = 'pk.eyJ1IjoiamFjb2Jyb2RyaWd1ZXo2NyIsImEiOiJjbGs3aWFkcnAwN2wxM2VtaTZrdzBoYTdsIn0.pdBbD2c-0Tn5h6vhhlJO-Q'; 
+        mapboxgl.accessToken = 'pk.eyJ1IjoiamFjb2Jyb2RyaWd1ZXo2NyIsImEiOiJjbGs3aWFkcnAwN2wxM2VtaTZrdzBoYTdsIn0.pdBbD2c-0Tn5h6vhhlJO-Q'; // Replace with your Mapbox access token
 
         const map = new mapboxgl.Map({
             container: 'map', // container ID
@@ -98,7 +98,7 @@
         });
 
         async function geojsonFetch() {
-            let response = await fetch('assets/wa-covid-data-102521.geojson');
+            let response = await fetch('assets/wa-covid-data-102521.geojson'); // Replace with the path to your geojson data file
             let covidData = await response.json();
 
             map.on('load', function loadingData() {
@@ -116,11 +116,12 @@
                             'interpolate',
                             ['linear'],
                             ['get', 'fullyVaxPer10k'],
-                            1000, '#EDF8E9',
-                            2000, '#BAE4B3',
-                            3000, '#74C476',
-                            4000, '#31A354',
-                            5000, '#006D2C'
+                            0, '#FFA500',
+                            1000, '#FFD700',
+                            2000, '#ADFF2F',
+                            3000, '#7FFF00',
+                            4000, '#32CD32',
+                            5000, '#008000'
                         ],
                         'fill-outline-color': '#BBBBBB',
                         'fill-opacity': 0.7,
@@ -128,18 +129,20 @@
                 });
 
                 const layers = [
-                    '1000-2000',
+                    '0-1000',
+                    '1001-2000',
                     '2001-3000',
                     '3001-4000',
                     '4001-5000',
-                    '5001-6000'
+                    '5001 and more'
                 ];
                 const colors = [
-                    '#EDF8E9',
-                    '#BAE4B3',
-                    '#74C476',
-                    '#31A354',
-                    '#006D2C'
+                    '#FFA500',
+                    '#FFD700',
+                    '#ADFF2F',
+                    '#7FFF00',
+                    '#32CD32',
+                    '#008000'
                 ];
 
                 const legend = document.getElementById('legend');
