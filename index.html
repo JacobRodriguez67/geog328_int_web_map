@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Washington State COVID-19 Vaccination Data</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.5.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.5.0/mapbox-gl.js"></script>
+    <style>
+        h2,
+        h3 {
+            margin: 10px;
+            font-size: 18px;
+        }
+
+        h3 {
+            font-size: 16px;
+        }
+
+        p {
+            margin: 10px;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+        }
+
+        .map-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            background: rgba(255, 255, 255, 0.8);
+            border-style: solid;
+            border-width: 1px;
+            border-color: rgba(0, 0, 0, 0.2);
+            margin-left: 20px;
+            font-family: Arial, sans-serif;
+            overflow: auto;
+            border-radius: 3px;
+            padding: 10px;
+            max-width: 250px;
+        }
+
+        #features {
+            top: 0;
+            height: 120px;
+            margin-top: 20px;
+            width: 250px;
+        }
+
+        #legend {
+            padding: 10px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            line-height: 18px;
+            height: 250px; /* Adjusted height to fit the increased content */
+            margin-bottom: 40px;
+            width: 150px;
+        }
+
+        .legend-key {
+            display: inline-block;
+            border-radius: 20%;
+            width: 10px;
+            height: 10px;
+            margin-right: 5px;
+        }
+
+        .mapboxgl-canvas-container.mapboxgl-interactive,
+        .mapboxgl-ctrl-group button.mapboxgl-ctrl-compass {
+            cursor: unset;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div class='map-overlay' id='features'>
+        <h2>Washington State COVID-19 Vaccination Data</h2>
+        <div id='text-description'>
+            <p>Hover over a county!</p>
+        </div>
+    </div>
+    <div class='map-overlay' id='legend'></div>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiamFjb2Jyb2RyaWd1ZXo2NyIsImEiOiJjbGs3aWFkcnAwN2wxM2VtaTZrdzBoYTdsIn0.pdBbD2c-0Tn5h6vhhlJO-Q'; 
+
+        const map = new mapboxgl.Map({
+            container: 'map', // container ID
+            style: 'mapbox://styles/mapbox/light-v10', // style URL
+            zoom: 6, // starting zoom
+            center: [-120.4473, 47.3073] // Washington State center
+        });
+
+        async function geojsonFetch() {
+            let response = await fetch('assets/wa-covid-data-102521.geojson');
+            let covidData = await response.json();
+
+            map.on('load', function loadingData() {
+                map.addSource('covidData', {
+                    type: 'geojson',
+                    data: covidData
+                });
+
+                map.addLayer({
+                    'id': 'covidData-layer',
+                    'type': 'fill',
+                    'source': 'covidData',
+                    'paint': {
+                        'fill-color': [
+                            'interpolate',
+                            ['linear'],
+                            ['get', 'fullyVaxPer10k'],
+                            1000, '#EDF8E9',
+                            2000, '#BAE4B3',
+                            3000, '#74C476',
+                            4000, '#31A354',
+                            5000, '#006D2C'
+                        ],
+                        'fill-outline-color': '#BBBBBB',
+                        'fill-opacity': 0.7,
+                    }
+                });
+
+                const layers = [
+                    '1000-2000',
+                    '2001-3000',
+                    '3001-4000',
+                    '4001-5000',
+                    '5001-6000'
+                ];
+                const colors = [
+                    '#EDF8E9',
+                    '#BAE4B3',
+                    '#74C476',
+                    '#31A354',
+                    '#006D2C'
+                ];
+
+                const legend = document.getElementById('legend');
+                legend.innerHTML = "<b>Fully Vaccinated per 10k<br>Population</b><br><br>";
+
+                layers.forEach((layer, i) => {
+                    const color = colors[i];
+                    const item = document.createElement('div');
+                    const key = document.createElement('span');
+                    key.className = 'legend-key';
+                    key.style.backgroundColor = color;
+
+                    const value = document.createElement('span');
+                    value.innerHTML = `${layer}`;
+                    item.appendChild(key);
+                    item.appendChild(value);
+                    legend.appendChild(item);
+                });
+
+                map.on('mousemove', ({ point }) => {
+                    const county = map.queryRenderedFeatures(point, {
+                        layers: ['covidData-layer']
+                    });
+                    document.getElementById('text-description').innerHTML = county.length ?
+                        `<h3>${county[0].properties.name}</h3>
+                        <p><strong>Fully Vaccinated per 10k:</strong> ${county[0].properties.fullyVaxPer10k}</p>` :
+                        `<p>Hover over a county!</p>`;
+                });
+            });
+        }
+
+        geojsonFetch();
+    </script>
+</body>
+
+</html>
